@@ -43,4 +43,30 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    
+    // Función para validar el formato del correo electrónico
+    function validateEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+    }
+
+    // Función para mostrar mensajes de error
+    function showError(input, message) {
+        const errorSpan = document.createElement('span');
+        errorSpan.className = 'error-message';
+        errorSpan.style.color = 'red';
+        errorSpan.textContent = message;
+        // Inserta el mensaje de error después del elemento padre del input
+        input.parentElement.appendChild(errorSpan);
+        // Añade atributos para mejorar accesibilidad
+        input.setAttribute('aria-describedby', 'error-' + input.id);
+        errorSpan.id = 'error-' + input.id;
+    }
+
+    // Función para limpiar los errores previos
+    function clearErrors() {
+        const errorMessages = form.querySelectorAll('.error-message');
+        errorMessages.forEach(function (message) {
+            message.remove();
+        });
+    }
+})
