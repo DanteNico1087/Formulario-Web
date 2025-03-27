@@ -25,10 +25,26 @@ document.addEventListener('DOMContentLoaded', function () {
         if (emailInput.value.trim() === '') {
             isValid = false;
             showError(emailInput, 'El campo correo electrónico no puede estar vacío');
-        } else if (!validateEmail(emailInput.value)) {
+        } else {
+            // Uso de validator.js para validar el correo electrónico
+            if (typeof validator !== 'undefined' && typeof validator.isEmail === 'function') {
+                if (!validator.isEmail(emailInput.value)) {
+                    isValid = false;
+                    showError(emailInput, 'Por favor, ingresa un correo electrónico válido');
+                }
+            } else {
+                const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!re.test(emailInput.value)) {
+                    isValid = false;
+                    showError(emailInput, 'Por favor, ingresa un correo electrónico válido');
+                }
+            }
+        }
+        
+        /*else if (!validateEmail(emailInput.value)) {
             isValid = false;
             showError(emailInput, 'Por favor, ingresa un correo electrónico válido');
-        }
+        }*/
 
         // Validación del campo 'Mensaje'
         if (messageInput.value.trim() === '') {
@@ -44,10 +60,10 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Función para validar el formato del correo electrónico
-    function validateEmail(email) {
+    /*function validateEmail(email) {
         const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return re.test(email);
-    }
+    }*/
 
     // Función para mostrar mensajes de error
     function showError(input, message) {
