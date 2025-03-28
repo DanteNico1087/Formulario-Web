@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     showError(emailInput, 'Por favor, ingresa un correo electrónico válido');
                 }
             } else {
+                // Fallback a una expresión regular si validator.js no está disponible
                 const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (!re.test(emailInput.value)) {
                     isValid = false;
@@ -40,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
         }
-        
+
         /*else if (!validateEmail(emailInput.value)) {
             isValid = false;
             showError(emailInput, 'Por favor, ingresa un correo electrónico válido');
@@ -53,36 +54,71 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         // Si el formulario es válido, se envía
-        if (isValid) {
+        /* if (isValid) {
             console.log('Formulario válido');
             form.submit();
         }
+    }); */
+
+        // Si el formulario es válido, enviarlo mediante AJAX usando fetch
+        if (isValid) {
+            // Recopilar los datos del formulario en formato JSON
+            const formData = {
+                name: nameInput.value.trim(),
+                email: emailInput.value.trim(),
+                message: messageInput.value.trim()
+            };
+
+        // Función para validar el formato del correo electrónico
+        /*function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }*/
+
+        fetch('/submit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        })
+
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta del servidor');
+                }
+                return response.json();
+            })
+
+            .then(data => {
+                console.log('Formulario enviado:', data);
+                form.reset(); // Limpia el formulario después de enviar
+            })
+            .catch(error => {
+                console.error('Error al enviar el formulario:', error);
+                // Aquí puedes mostrar un mensaje de error al usuario
+            });
+        }
     });
 
-    // Función para validar el formato del correo electrónico
-    /*function validateEmail(email) {
-        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return re.test(email);
-    }*/
+        // Función para mostrar mensajes de error
+        function showError(input, message) {
+            const errorSpan = document.createElement('span');
+            errorSpan.className = 'error-message';
+            errorSpan.style.color = 'red';
+            errorSpan.textContent = message;
+            // Inserta el mensaje de error después del elemento padre del input
+            input.parentElement.appendChild(errorSpan);
+            // Añade atributos para mejorar accesibilidad
+            input.setAttribute('aria-describedby', 'error-' + input.id);
+            errorSpan.id = 'error-' + input.id;
+        }
 
-    // Función para mostrar mensajes de error
-    function showError(input, message) {
-        const errorSpan = document.createElement('span');
-        errorSpan.className = 'error-message';
-        errorSpan.style.color = 'red';
-        errorSpan.textContent = message;
-        // Inserta el mensaje de error después del elemento padre del input
-        input.parentElement.appendChild(errorSpan);
-        // Añade atributos para mejorar accesibilidad
-        input.setAttribute('aria-describedby', 'error-' + input.id);
-        errorSpan.id = 'error-' + input.id;
-    }
-
-    // Función para limpiar los errores previos
-    function clearErrors() {
-        const errorMessages = form.querySelectorAll('.error-message');
-        errorMessages.forEach(function (message) {
-            message.remove();
-        });
-    }
-})
+        // Función para limpiar los errores previos
+        function clearErrors() {
+            const errorMessages = form.querySelectorAll('.error-message');
+            errorMessages.forEach(function (message) {
+                message.remove();
+            });
+        }
+    });
