@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 return re.test(email);
             }*/
 
-            fetch('http://localhost:3000/submissions', {
+            fetch('http://localhost:3000/submit', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
