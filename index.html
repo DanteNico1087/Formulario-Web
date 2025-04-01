@@ -17,6 +17,15 @@
     </header>
 
     <main>
+
+        <!-- Notificación de mensajes para el usuario -->
+        <div id="notification" role="alert" aria-live="assertive"></div>
+
+        <!-- Spinner de carga: inicialmente oculto-->
+        <div id="spinner" class="spinner" hidden>
+            <p>Cargando...</p>
+        </div>
+
         <form id="contactForm" action="/submit" method="post" novalidate>
 
             <div>

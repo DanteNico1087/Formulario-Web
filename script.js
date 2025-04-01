@@ -1,12 +1,15 @@
 // Espera a que el documento esté completamente cargado
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('contactForm');
+    const notification = document.getElementById('notification');
+    const spinner = document.getElementById('spinner');
 
     form.addEventListener('submit', function (e) {
         // Previene el envío del formulario
         e.preventDefault();
-        // Limpia errores previos
+        // Limpia errores previos y notificaciones
         clearErrors();
+        clearNotification();
 
         // Bandera para saber si el formulario es válido
         let isValid = true;
@@ -60,8 +63,22 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }); */
 
+        if (!isValid) {
+            const firstErrorField = document.querySelector('.error-message').previousElementSibling;
+            if (firstErrorField) {
+                firstErrorField.focus(); // Enfoca el primer campo con error
+            }
+            // Muestra una notificación de error
+            showNotification('Por favor, corrige los errores en el formulario.', 'error');
+            return; // Detiene la ejecución si hay errores
+
+        }
+
+        // Si el formulario es válido, muestra una notificación de éxito
+        spinner.hidden = false; // Muestra el spinner de carga
+
+
         // Si el formulario es válido, enviarlo mediante AJAX usando fetch
-        if (isValid) {
             // Recopilar los datos del formulario en formato JSON
             const formData = {
                 name: nameInput.value.trim(),
@@ -69,56 +86,71 @@ document.addEventListener('DOMContentLoaded', function () {
                 message: messageInput.value.trim()
             };
 
-        // Función para validar el formato del correo electrónico
-        /*function validateEmail(email) {
-            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return re.test(email);
-        }*/
+            // Función para validar el formato del correo electrónico
+            /*function validateEmail(email) {
+                const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return re.test(email);
+            }*/
 
-        fetch('http://localhost:3000/submissions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
-        })
-
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Error en la respuesta del servidor');
-                }
-                return response.json();
+            fetch('http://localhost:3000/submissions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
             })
 
-            .then(data => {
-                console.log('Formulario enviado:', data);
-                form.reset(); // Limpia el formulario después de enviar
-            })
-            .catch(error => {
-                console.error('Error al enviar el formulario:', error);
-                // Aquí puedes mostrar un mensaje de error al usuario
-            });
-        }
+                .then(response => {
+                    spinner.hidden = true; // Oculta el spinner de carga
+                    if (!response.ok) {
+                        throw new Error('Error en la respuesta del servidor');
+                    }
+                    return response.json();
+                })
+
+                .then(data => {
+                    console.log('Formulario enviado:', data);
+                    form.reset(); // Limpia el formulario después de enviar
+                    showNotification('Formulario enviado con éxito', 'success');
+                })
+                .catch(error => {
+                    spinner.hidden = true; // Oculta el spinner de carga
+                    console.error('Error al enviar el formulario:', error);
+                    // Aquí puedes mostrar un mensaje de error al usuario
+                    showNotification('Error al enviar el formulario. Intenta nuevamente más tarde.', 'error');
+                });
     });
 
-        // Función para mostrar mensajes de error
-        function showError(input, message) {
-            const errorSpan = document.createElement('span');
-            errorSpan.className = 'error-message';
-            errorSpan.style.color = 'red';
-            errorSpan.textContent = message;
-            // Inserta el mensaje de error después del elemento padre del input
-            input.parentElement.appendChild(errorSpan);
-            // Añade atributos para mejorar accesibilidad
-            input.setAttribute('aria-describedby', 'error-' + input.id);
-            errorSpan.id = 'error-' + input.id;
-        }
+    // Función para mostrar mensajes de error
+    function showError(input, message) {
+        const errorSpan = document.createElement('span');
+        errorSpan.className = 'error-message';
+        errorSpan.style.color = 'red';
+        errorSpan.textContent = message;
+        // Inserta el mensaje de error después del elemento padre del input
+        input.parentElement.appendChild(errorSpan);
+        // Añade atributos para mejorar accesibilidad
+        input.setAttribute('aria-describedby', 'error-' + input.id);
+        errorSpan.id = 'error-' + input.id;
+    }
 
-        // Función para limpiar los errores previos
-        function clearErrors() {
-            const errorMessages = form.querySelectorAll('.error-message');
-            errorMessages.forEach(function (message) {
-                message.remove();
-            });
-        }
-    });
+    // Función para limpiar los errores previos
+    function clearErrors() {
+        const errorMessages = form.querySelectorAll('.error-message');
+        errorMessages.forEach(function (message) {
+            message.remove();
+        });
+    }
+
+    // Función para mostrar notificaciones
+    function showNotification(message, type) {
+        notification.textContent = message;
+        notification.className = type;
+    }
+
+    // Función para limpiar la notificación
+    function clearNotification() {
+        notification.textContent = '';
+        notification.className = '';
+    }
+});
