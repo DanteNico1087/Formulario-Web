@@ -26,6 +26,11 @@ app.use(limiter); // Usar el limitador de tasa en todas las solicitudes
 
 const csrfProtection = csurf({ cookie: true }); // Configurar protección CSRF usando cookies
 
+app.get('/csrf-token', csrfProtection, (req, res) => {
+    // Ruta para obtener el token CSRF
+    res.json({ csrfToken: req.csrfToken() }); 
+});
+
 app.post('/submit', csrfProtection [
     body('name')
     .trim()
@@ -36,7 +41,7 @@ app.post('/submit', csrfProtection [
     .trim()
     .notEmpty().withMessage('El mensaje es obligatorio')
 ],
-async (req, res) => {
+async (req, res) => {'pl,'
     const errors = validationResult(req); // Validar los datos de entrada
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() }); // Respuesta de error si hay errores de validación
