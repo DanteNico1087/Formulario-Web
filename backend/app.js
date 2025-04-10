@@ -1,65 +1,58 @@
-require('dotenv').config(); // Cargar variables de entorno desde un archivo .env
-// Importar el módulo de Express
+// Importar el módulo express
 const express = require('express');
-const helmet = require('helmet'); // Importar el módulo Helmet para mejorar la seguridad de las aplicaciones Express
-const cors = require('cors'); // Importar el módulo CORS para manejar solicitudes entre dominios
-const rateLmit = require('express-rate-limit'); // Importar el módulo express-rate-limit para limitar la tasa de solicitudes
-const csurf = require('csurf'); // Importar el módulo csurf para proteger contra ataques CSRF
-const cookieParser = require('cookie-parser'); // Importar el módulo cookie-parser para manejar cookies
-const { body, validationResult } = require('express-validator'); // Importar el módulo express-validator para validar datos de entrada
-const morgan = require('morgan'); // Importar el módulo morgan para registrar solicitudes HTTP
+// Importar el módulo cors para habilitar CORS
+const cors = require('cors');
 
+require('dotenv').config(); // Cargar las variables de entorno desde el archivo .env
+
+const helmet = require('helmet'); // Importar helmet para mejorar la seguridad de la aplicación
+app.use(helmet()); // Usar helmet como middleware para proteger la aplicación
+
+// Crear una instancia de express
 const app = express();
-app.use(helmet()); // Usar Helmet para proteger la aplicación Express
-app.use(cors()); // Usar CORS para permitir solicitudes desde otros dominios
-app.use(morgan('combined')); // Usar morgan para registrar solicitudes HTTP en formato combinado
-app.use(cookieParser()); // Middleware para parsear cookies
+// Habilitar CORS para todas las rutas
+app.use(cors());
 
-app.use(express.json()); // Middleware para parsear el cuerpo de las solicitudes JSON
+const rateLimit = require('express-rate-limit'); // Importar express-rate-limit para limitar la tasa de solicitudes
 
-const limiter = rateLmit({
+const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutos
-    max: 100, // Limitar a 100 solicitudes por IP en un intervalo de 15 minutos
-    message: 'Demasiadas solicitudes, por favor intente más tarde.' // Mensaje de error si se supera el límite
+    max: 100 // Limitar cada IP a 100 solicitudes por IP
+    message: 'Demasiadas solicitudes desde esta IP, por favor intente nuevamente más tarde.'
 });
-app.use(limiter); // Usar el limitador de tasa en todas las solicitudes
 
-const csrfProtection = csurf({ cookie: true }); // Configurar protección CSRF usando cookies
+app.use(limiter); // Usar el limitador como middleware para todas las rutas
+
+
+// Definir el puerto en el que se ejecutará la aplicación
+const port = process.env.PORT || 3000;
+
+// Middleware para parsear el cuerpo de las solicitudes JSON
+app.use(express.json());
+
+const morgan = require('morgan'); // Importar morgan para registrar las solicitudes HTTP
+app.use(morgan('combined')); // Usar morgan como middleware para registrar las solicitudes HTTP
+
+const csurf = require('csurf'); // Importar csurf para proteger contra ataques CSRF
+const cookieParser = require('cookie-parser'); // Importar cookie-parser para analizar cookies
+app.use(cookieParser()); // Usar cookie-parser como middleware para analizar cookies
+const csrfProtection = csurf({ cookie: true }); // Configurar csurf para usar cookies
 
 app.get('/csrf-token', csrfProtection, (req, res) => {
-    // Ruta para obtener el token CSRF
-    res.json({ csrfToken: req.csrfToken() }); 
+    res.json({ csrfToken: req.csrfToken() }); // Enviar el token CSRF al cliente
 });
 
-app.post('/submit', csrfProtection [
-    body('name')
-    .trim()
-    .noEmpty().withMessage('El nombre es obligatorio'),
-    body('email')
-    .isEmail().withMessage('El correo electrónico no es válido'),
-    body('message')
-    .trim()
-    .notEmpty().withMessage('El mensaje es obligatorio')
-],
-async (req, res) => {'pl,'
-    const errors = validationResult(req); // Validar los datos de entrada
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() }); // Respuesta de error si hay errores de validación
+app.post('/submit', (req, res) => {
+    const { name, email, message } = req.body;
+
+    if (!name || !email || !message) {
+        return res.status(400).json({ error: 'Todos los campos son obligatorios' });
     }
-
-    const { name, email, message } = req.body; // Desestructurar el cuerpo de la solicitud
-
-    console.log('Datos recibidos:', { name, email, message }); // Registrar los datos recibidos en la consola
-    res.status(200).json({ message: 'Formulario recibido con éxito' }); // Respuesta de éxito
+    console.log('Nueva presentación recibida:', req.body);
+    res.status(200).json({ message: 'Formulario recibido con éxito' });
 });
 
-app.use((err, req, res, next) => {
-    console.error('Error inesperado:'err.stack); // Registrar el error en la consola
-    res.status(500).json({ error: 'Error interno del servidor' }); // Manejo de errores 500
-});
-
-const port = 3000; // Puerto en el que el servidor escuchará las solicitudes
-// Iniciar el servidor en el puerto especificado
+// Iniciar el servidor
 app.listen(port, () => {
-    console.log(`Servidor escuchando en http://localhost:${port}`); // Mensaje de inicio del servidor
+    console.log(`Servidor escuchando en http://localhost:${port}`);
 });
